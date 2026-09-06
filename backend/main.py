@@ -12,7 +12,7 @@ from pydantic import BaseModel, EmailStr
 
 from backend.database import init_db, get_db_cursor
 from backend.auth import hash_password, verify_password, create_session, get_current_user, get_optional_user
-from backend.countries import COUNTRIES, COUNTRY_MAP
+from backend.countries import COUNTRIES, OTHER_LANGUAGE_ROOMS, ALL_ROOMS, COUNTRY_MAP
 from backend.seed import seed_database
 from backend.blogs import BLOG_ARTICLES, BLOG_MAP
 
@@ -20,7 +20,7 @@ from backend.blogs import BLOG_ARTICLES, BLOG_MAP
 class ConnectionManager:
     def __init__(self):
         # room_id -> set of WebSockets
-        self.room_connections: Dict[str, Set[WebSocket]] = {c["id"]: set() for c in COUNTRIES}
+        self.room_connections: Dict[str, Set[WebSocket]] = {c["id"]: set() for c in ALL_ROOMS}
         # user_id -> set of WebSockets (for DMs, presence, squad notifications)
         self.user_connections: Dict[int, Set[WebSocket]] = {}
         # squad_id -> set of WebSockets
@@ -237,10 +237,10 @@ def logout(user: dict = Depends(get_current_user)):
         cur.execute("DELETE FROM sessions WHERE user_id = ?", (user["id"],))
     return {"message": "Logged out successfully"}
 
-# --- Country Chat Rooms (15 Nations) ---
+# --- National & World Language Chat Rooms ---
 @app.get("/api/countries")
-def get_countries():
-    # Return 15 countries with active player & message counts
+def get_countries(category: Optional[str] = None, language: Optional[str] = None):
+    # Return national & world language rooms with active player & message counts
     with get_db_cursor(commit=False) as cur:
         cur.execute("""
             SELECT room_id, count(id) as msg_count 
@@ -257,13 +257,20 @@ def get_countries():
         """)
         online_counts = {r["country"]: r["online_count"] for r in cur.fetchall()}
 
+    rooms = ALL_ROOMS
+    if category and category != "All":
+        rooms = [r for r in rooms if r.get("category") == category]
+    if language and language != "All":
+        lang_low = language.lower()
+        rooms = [r for r in rooms if lang_low in r.get("language", "").lower() or lang_low in r.get("language_native", "").lower()]
+
     result = []
-    for c in COUNTRIES:
+    for c in rooms:
         cid = c["id"]
         ccode = c["code"]
         c_copy = dict(c)
         c_copy["message_count"] = msg_counts.get(cid, 0)
-        c_copy["online_count"] = max(online_counts.get(ccode, 0), len(manager.room_connections.get(cid, set())) + 3)
+        c_copy["online_count"] = max(online_counts.get(ccode, 0), len(manager.room_connections.get(cid, set())) + (5 if c.get("category") == "other_language" else 3))
         result.append(c_copy)
     return result
 

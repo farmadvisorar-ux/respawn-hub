@@ -13,7 +13,9 @@ const AVATAR_MAP = {
 const COUNTRY_FLAGS = {
   "US": "🇺🇸", "GB": "🇬🇧", "CA": "🇨🇦", "DE": "🇩🇪", "FR": "🇫🇷",
   "JP": "🇯🇵", "KR": "🇰🇷", "BR": "🇧🇷", "AU": "🇦🇺", "SE": "🇸🇪",
-  "PL": "🇵🇱", "ES": "🇪🇸", "IT": "🇮🇹", "MX": "🇲🇽", "NL": "🇳🇱"
+  "PL": "🇵🇱", "ES": "🇪🇸", "IT": "🇮🇹", "MX": "🇲🇽", "NL": "🇳🇱",
+  "UN": "🌐", "CN": "🇨🇳", "TR": "🇹🇷", "SA": "🇸🇦", "VN": "🇻🇳",
+  "PH": "🇵🇭", "IN": "🇮🇳"
 };
 
 // Global State
@@ -23,6 +25,9 @@ const state = {
   currentTab: "squads",
   countries: [],
   activeCountryId: "us",
+  selectedChatCategory: "all",
+  selectedChatLanguage: "All",
+  chatSearchQuery: "",
   activeConvoPartnerId: null,
   activeSquad: null,
   squadsList: [],
@@ -340,7 +345,7 @@ function connectUserSocket() {
   }, 25000);
 }
 
-// --- 15 National Flag Chat Hub ---
+// --- National & World Language Chat Hub ---
 async function loadCountries() {
   try {
     const res = await fetch("/api/countries");
@@ -357,33 +362,184 @@ function renderCountryChips() {
   const container = document.getElementById("countries-chips-container");
   if (!container) return;
 
-  container.innerHTML = state.countries.map(c => `
-    <div class="country-chip ${c.id === state.activeCountryId ? 'active' : ''}" onclick="selectCountryRoom('${c.id}')" id="chip-${c.id}">
-      <span class="chip-flag">${c.flag}</span>
-      <span class="chip-name">${c.name}</span>
-      <span class="chip-online">${c.online_count} <i class="fa-solid fa-signal fa-2xs"></i></span>
-    </div>
-  `).join("");
+  const countEl = document.getElementById("count-all-rooms");
+  if (countEl) countEl.innerText = state.countries.length;
+
+  let rooms = state.countries || [];
+
+  // Filter by category (national vs other_language)
+  if (state.selectedChatCategory && state.selectedChatCategory !== "all") {
+    rooms = rooms.filter(c => c.category === state.selectedChatCategory);
+  }
+
+  // Filter by language
+  if (state.selectedChatLanguage && state.selectedChatLanguage !== "All") {
+    const l = state.selectedChatLanguage.toLowerCase();
+    rooms = rooms.filter(c => 
+      (c.language && c.language.toLowerCase().includes(l)) ||
+      (c.language_native && c.language_native.toLowerCase().includes(l)) ||
+      (c.name && c.name.toLowerCase().includes(l))
+    );
+  }
+
+  // Filter by local search query
+  if (state.chatSearchQuery) {
+    const q = state.chatSearchQuery.toLowerCase();
+    rooms = rooms.filter(c => 
+      c.name.toLowerCase().includes(q) ||
+      (c.language && c.language.toLowerCase().includes(q)) ||
+      (c.language_native && c.language_native.toLowerCase().includes(q)) ||
+      (c.tagline && c.tagline.toLowerCase().includes(q)) ||
+      (c.code && c.code.toLowerCase().includes(q))
+    );
+  }
+
+  if (rooms.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 10px 14px; color: var(--text-dim); font-size: 12px; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-circle-exclamation" style="color: var(--neon-cyan);"></i> No chat rooms match this language filter. 
+        <button class="country-chip" onclick="resetChatFilters()" style="padding: 3px 10px; font-size: 11px;">Reset Filter</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = rooms.map(c => {
+    const isActive = c.id === state.activeCountryId;
+    const langLabel = c.language_native || c.language || "Global";
+    return `
+      <div class="country-chip ${isActive ? 'active' : ''}" onclick="selectCountryRoom('${c.id}')" id="chip-${c.id}" title="${c.name} - ${c.language}">
+        <span class="chip-flag">${c.flag}</span>
+        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+          <span class="chip-name">${c.name}</span>
+          <span class="room-lang-tag">${langLabel}</span>
+        </div>
+        <span class="chip-online">${c.online_count} <i class="fa-solid fa-signal fa-2xs"></i></span>
+      </div>
+    `;
+  }).join("");
 }
 
 async function selectCountryRoom(roomId) {
   state.activeCountryId = roomId;
   renderCountryChips();
 
-  const country = state.countries.find(c => c.id === roomId) || {
-    name: "Regional Hub", flag: "🌐", tagline: "Universal Gaming Comms", online_count: 10
+  const country = (state.countries || []).find(c => c.id === roomId) || {
+    name: "Regional Hub", flag: "🌐", tagline: "Universal Gaming Comms", online_count: 10,
+    language: "Multilingual", language_native: "Global", welcome_msg: "Welcome to the Hub!",
+    input_placeholder: "Type message in this room... (Enter to send)", quick_phrases: []
   };
 
-  document.getElementById("active-chat-flag").innerText = country.flag;
-  document.getElementById("active-chat-name").innerText = `${country.name} Hub`;
-  document.getElementById("active-chat-online").innerHTML = `<i class="fa-solid fa-circle fa-2xs"></i> ${country.online_count} Gamers Active`;
-  document.getElementById("active-chat-tagline").innerText = country.tagline;
+  const flagEl = document.getElementById("active-chat-flag");
+  if (flagEl) flagEl.innerText = country.flag;
+
+  const nameEl = document.getElementById("active-chat-name");
+  if (nameEl) nameEl.innerText = `${country.name} Hub`;
+
+  const langEl = document.getElementById("active-chat-lang");
+  if (langEl) langEl.innerHTML = `<i class="fa-solid fa-language"></i> ${country.language || 'Multilingual'}`;
+
+  const onlineEl = document.getElementById("active-chat-online");
+  if (onlineEl) onlineEl.innerHTML = `<i class="fa-solid fa-circle fa-2xs"></i> ${country.online_count} Gamers Active`;
+
+  const tagEl = document.getElementById("active-chat-tagline");
+  if (tagEl) tagEl.innerText = country.tagline;
+
+  const welcomeEl = document.getElementById("active-chat-welcome");
+  if (welcomeEl) {
+    welcomeEl.innerText = country.welcome_msg || "";
+  }
+
+  const inputEl = document.getElementById("chat-msg-input");
+  if (inputEl) {
+    inputEl.placeholder = country.input_placeholder || "Type message in this room... (Enter to send)";
+  }
+
+  // Render localized quick gamer phrases
+  renderQuickPhrases(country.quick_phrases || []);
 
   // Load chat messages
   await refreshActiveRoomChat();
 
   // Connect WebSocket for room
   connectRoomWebSocket(roomId);
+}
+
+function renderQuickPhrases(phrases) {
+  const container = document.getElementById("chat-quick-phrases-container");
+  if (!container) return;
+
+  if (!phrases || phrases.length === 0) {
+    container.innerHTML = `
+      <button class="btn-quick-phrase" onclick="insertQuickPhrase('Looking for +1 duo with mic right now!')">
+        🎯 Looking for duo
+      </button>
+      <button class="btn-quick-phrase" onclick="insertQuickPhrase('Anyone playing comp tonight? Add me!')">
+        ⚡ Add me for comp
+      </button>
+      <button class="btn-quick-phrase" onclick="insertQuickPhrase('How is the server ping right now?')">
+        📡 Server ping check
+      </button>
+      <button class="btn-quick-phrase" onclick="insertQuickPhrase('Great round, good game! GG')">
+        🔥 GG
+      </button>
+    `;
+    return;
+  }
+
+  container.innerHTML = phrases.map(p => `
+    <button class="btn-quick-phrase" onclick="insertQuickPhrase('${escapeHTML(p.text).replace(/'/g, "\\'")}')">
+      ${escapeHTML(p.label)}
+    </button>
+  `).join("");
+}
+
+function filterChatCategory(cat) {
+  state.selectedChatCategory = cat;
+  document.querySelectorAll("#chat-category-tabs .country-chip").forEach(b => b.classList.remove("active"));
+  if (cat === "all") document.getElementById("btn-cat-all")?.classList.add("active");
+  else if (cat === "national") document.getElementById("btn-cat-national")?.classList.add("active");
+  else if (cat === "other_language") document.getElementById("btn-cat-other")?.classList.add("active");
+  renderCountryChips();
+}
+
+function filterChatLanguage(lang) {
+  state.selectedChatLanguage = lang;
+  document.querySelectorAll("#chat-language-pills .country-chip").forEach(b => b.classList.remove("active"));
+  
+  const pills = document.querySelectorAll("#chat-language-pills .country-chip");
+  pills.forEach(p => {
+    if (p.innerText.includes(lang) || (lang === "All" && p.innerText.includes("All Languages"))) {
+      p.classList.add("active");
+    }
+  });
+
+  renderCountryChips();
+}
+
+function filterChatRoomsLocally() {
+  const q = document.getElementById("search-chat-rooms")?.value || "";
+  state.chatSearchQuery = q;
+  renderCountryChips();
+}
+
+function resetChatFilters() {
+  state.selectedChatCategory = "all";
+  state.selectedChatLanguage = "All";
+  state.chatSearchQuery = "";
+  const input = document.getElementById("search-chat-rooms");
+  if (input) input.value = "";
+  filterChatCategory("all");
+  filterChatLanguage("All");
+}
+
+function insertQuickPhrase(phrase) {
+  const input = document.getElementById("chat-msg-input");
+  if (input) {
+    input.value = phrase;
+    input.focus();
+    window.audioManager.playClick();
+  }
 }
 
 async function refreshActiveRoomChat() {
@@ -476,12 +632,6 @@ async function sendRoomMessage() {
   } catch (err) {
     console.error("Failed to send message:", err);
   }
-}
-
-function insertQuickPhrase(phrase) {
-  const input = document.getElementById("chat-msg-input");
-  input.value = phrase;
-  input.focus();
 }
 
 // --- Squad Finder & LFG Lobbies ---

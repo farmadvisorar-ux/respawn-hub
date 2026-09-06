@@ -198,34 +198,80 @@
           </div>
         </section>
 
-        <!-- TAB 2: 15 NATIONAL FLAG CHAT ROOMS -->
+        <!-- TAB 2: NATIONAL & MULTILINGUAL CHAT ROOMS -->
         <section class="tab-panel" id="tab-chat">
           <div style="margin-bottom: 16px;">
             <h1 style="font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: 1px;">
-              UNIVERSAL REGIONAL CHAT // 15 NATIONAL HUBS
+              UNIVERSAL REGIONAL & MULTILINGUAL CHAT // 15 NATIONS + WORLD LANGUAGES
             </h1>
             <p style="color: var(--text-muted); font-size: 14px;">
-              Hop into real-time nationality chat rooms to find local duos, discuss server routing, and talk games.
+              Hop into real-time nationality and language chat rooms to find local duos, speak your native tongue, and talk games.
             </p>
           </div>
 
-          <!-- 15 Country Flag Carousel / Chips -->
+          <!-- Category & Language Filter Bar -->
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+            <!-- Category Tabs & Search -->
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; gap: 8px;" id="chat-category-tabs">
+                <button class="country-chip active" id="btn-cat-all" onclick="filterChatCategory('all')">
+                  🌐 All Chat Rooms (<span id="count-all-rooms">22</span>)
+                </button>
+                <button class="country-chip" id="btn-cat-national" onclick="filterChatCategory('national')">
+                  🌟 15 National Hubs (15)
+                </button>
+                <button class="country-chip" id="btn-cat-other" onclick="filterChatCategory('other_language')">
+                  🗣️ Other Languages & Global (7)
+                </button>
+              </div>
+
+              <input type="text" class="form-input" id="search-chat-rooms" placeholder="Search country or language..." style="width: 240px; padding: 7px 12px; font-size: 12px;" oninput="filterChatRoomsLocally()">
+            </div>
+
+            <!-- Quick Language Filter Pills -->
+            <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;" id="chat-language-pills">
+              <button class="country-chip active" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('All')" id="lang-pill-all">All Languages</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('English')" id="lang-pill-en">🇺🇸 English</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Español')" id="lang-pill-es">🇪🇸 Español</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('日本語')" id="lang-pill-ja">🇯🇵 日本語</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('한국어')" id="lang-pill-ko">🇰🇷 한국어</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Deutsch')" id="lang-pill-de">🇩🇪 Deutsch</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Français')" id="lang-pill-fr">🇫🇷 Français</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Português')" id="lang-pill-pt">🇧🇷 Português</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('中文')" id="lang-pill-zh">🇨🇳 中文</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Polski')" id="lang-pill-pl">🇵🇱 Polski</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Italiano')" id="lang-pill-it">🇮🇹 Italiano</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Türkçe')" id="lang-pill-tr">🇹🇷 Türkçe</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('العربية')" id="lang-pill-ar">🇸🇦 العربية</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Nederlands')" id="lang-pill-nl">🇳🇱 Nederlands</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Svenska')" id="lang-pill-sv">🇸🇪 Svenska</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Tiếng Việt')" id="lang-pill-vi">🇻🇳 Tiếng Việt</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('Tagalog')" id="lang-pill-fil">🇵🇭 Tagalog</button>
+              <button class="country-chip" style="font-size: 11px; padding: 4px 10px;" onclick="filterChatLanguage('हिन्दी')" id="lang-pill-hi">🇮🇳 हिन्दी</button>
+            </div>
+          </div>
+
+          <!-- Country & Language Carousel / Chips -->
           <div class="countries-bar" id="countries-chips-container">
-            <!-- Populated dynamically with 15 country flags -->
+            <!-- Populated dynamically with country & language chips -->
           </div>
 
           <!-- Live Chat Container -->
           <div class="chat-container">
             <div class="chat-header">
               <div style="display: flex; align-items: center; gap: 14px;">
-                <span id="active-chat-flag" style="font-size: 28px;">🇺🇸</span>
+                <span id="active-chat-flag" style="font-size: 32px;">🇺🇸</span>
                 <div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <span id="active-chat-name" style="font-size: 16px; font-weight: 800;">United States Hub</span>
+                    <span class="chip-lang-badge" id="active-chat-lang"><i class="fa-solid fa-language"></i> English (US)</span>
                     <span class="chip-online" id="active-chat-online"><i class="fa-solid fa-circle fa-2xs"></i> 14 Gamers Online</span>
                   </div>
-                  <div id="active-chat-tagline" style="font-size: 12px; color: var(--text-muted);">
+                  <div id="active-chat-tagline" style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
                     NA Ranked Grind & College Esports
+                  </div>
+                  <div id="active-chat-welcome" style="font-size: 11px; color: var(--neon-cyan); margin-top: 3px; font-weight: 600;">
+                    Welcome to the United States Hub!
                   </div>
                 </div>
               </div>
@@ -241,22 +287,14 @@
               <!-- Dynamically populated -->
             </div>
 
-            <!-- Quick Gamer Phrases -->
-            <div style="display: flex; gap: 8px; padding: 6px 20px; background: rgba(0,0,0,0.2); overflow-x: auto;">
-              <button onclick="insertQuickPhrase('Looking for +1 duo with mic right now!')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 11px; padding: 3px 10px; border-radius: 12px; cursor: pointer; white-space: nowrap;">
-                🎯 Looking for duo
-              </button>
-              <button onclick="insertQuickPhrase('Anyone playing comp tonight? Add me!')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 11px; padding: 3px 10px; border-radius: 12px; cursor: pointer; white-space: nowrap;">
-                ⚡ Add me for comp
-              </button>
-              <button onclick="insertQuickPhrase('How is the server ping right now?')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 11px; padding: 3px 10px; border-radius: 12px; cursor: pointer; white-space: nowrap;">
-                📡 Server ping check
-              </button>
+            <!-- Localized Quick Gamer Phrases -->
+            <div id="chat-quick-phrases-container" style="display: flex; gap: 8px; padding: 8px 20px; background: rgba(0,0,0,0.25); overflow-x: auto; border-top: 1px solid var(--border-subtle);">
+              <!-- Injected dynamically based on room language -->
             </div>
 
             <!-- Input Bar -->
             <div class="chat-input-bar">
-              <input type="text" class="chat-input" id="chat-msg-input" placeholder="Type message in this national room... (Enter to send)" onkeydown="if(event.key==='Enter') sendRoomMessage()">
+              <input type="text" class="chat-input" id="chat-msg-input" placeholder="Type message in this room... (Enter to send)" onkeydown="if(event.key==='Enter') sendRoomMessage()">
               <button class="btn-send" onclick="sendRoomMessage()">
                 <span>SEND</span>
                 <i class="fa-solid fa-paper-plane"></i>

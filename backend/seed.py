@@ -291,6 +291,41 @@ COUNTRY_CHAT_SAMPLES = {
         ("OrangeFlashNL", "neon_pilot", "Immortal 2", "NL", "Hallo allemaal! Amsterdam server 4ms ping feels like playing on LAN."),
         ("PixelPhoenix", "neon_pilot", "Grand Champion I", "FR", "EU West servers are the best for real."),
         ("OrangeFlashNL", "neon_pilot", "Immortal 2", "NL", "Absoluut! Open squad for anyone wanting fast tactical executes.")
+    ],
+    "global": [
+        ("ViperShot", "cyber_ninja", "Ascendant 3", "US", "Welcome everyone to the Global Multilingual Lounge! Feel free to talk in any language or find international squads."),
+        ("PixelPhoenix", "neon_pilot", "Grand Champion I", "FR", "Hello world! Looking for chill players across all regions."),
+        ("SakuraBlade", "cyber_samurai", "Immortal 1", "JP", "Welcome to RESPAWN! Have fun everyone / よろしくお願いします！")
+    ],
+    "cn": [
+        ("DragonSlayer", "cyber_samurai", "Radiant", "CN", "兄弟们好！无畏契约港服/国服超凡赋能排位找个带麦的搭子，主玩决斗/信息位。"),
+        ("ShadowStriker", "tactical_ghost", "Faceit Lvl 9", "DE", "Welcome to the Chinese hub! Looking forward to international scrims."),
+        ("DragonSlayer", "cyber_samurai", "Radiant", "CN", "今晚八点准时开打，想上分的直接进队或者加好友！")
+    ],
+    "tr": [
+        ("AnatolianWolf", "mech_warrior", "Faceit Lvl 8", "TR", "Selamlar gençler! CS2 Premier ve Valorant için mikrofonlu, tilt olmayan duo arıyorum."),
+        ("HussarPL", "mech_warrior", "Divine 3", "PL", "Greetings to Turkish gamers! Good luck on Istanbul servers."),
+        ("AnatolianWolf", "mech_warrior", "Faceit Lvl 8", "TR", "Eyvallah kardeşim! Akşam 20:00'de rank kasıyoruz, gelen gelsin.")
+    ],
+    "mena": [
+        ("DesertEagle", "arctic_sniper", "Immortal 1", "SA", "السلام عليكم جميعاً! أحد يبي رانكد فالورانت أو كود وارزون الليلة؟ سيرفر البحرين والخليج."),
+        ("ViperShot", "cyber_ninja", "Ascendant 3", "US", "Shoutout to the MENA esports scene, aim is insane in these servers."),
+        ("DesertEagle", "arctic_sniper", "Immortal 1", "SA", "حياك يا وحش! الرانكد مشتعل اليوم والبينق 12ms ممتاز.")
+    ],
+    "vn": [
+        ("DragonViet", "bionic_brawler", "Thách Đấu", "VN", "Chào anh em! Tìm đồng đội leo rank Valorant hoặc LMHT máy chủ Đông Nam Á có mic giao tiếp tốt."),
+        ("AussieAimer", "cyber_ninja", "Master 4", "AU", "Love playing on SEA servers, fast lobbies!"),
+        ("DragonViet", "bionic_brawler", "Thách Đấu", "VN", "Chuẩn luôn bác ơi! Tối nay ai rảnh kéo rank thì add mình nhé.")
+    ],
+    "ph": [
+        ("PinoyClutcher", "neon_pilot", "Immortal 2", "PH", "Kamusta mga lods! LF duo or trio sa Valorant / Dota 2 Manila server with mic and good vibes!"),
+        ("DragonViet", "bionic_brawler", "Thách Đấu", "VN", "G duos bro, HK server ping is clean!"),
+        ("PinoyClutcher", "neon_pilot", "Immortal 2", "PH", "Tara g! Add me up let's get that rank win streak.")
+    ],
+    "in": [
+        ("DesiFragger", "mech_warrior", "Ascendant 2", "IN", "Namaste bhai log! Koi Valorant ya CS2 ke liye duo/trio hai? Mumbai server ping 10ms hai."),
+        ("ViperShot", "cyber_ninja", "Ascendant 3", "US", "Big respect to Indian esports grinders! Always locked in."),
+        ("DesiFragger", "mech_warrior", "Ascendant 2", "IN", "Thanks bro! Aaj raat full rank push karenge, mic is always on.")
     ]
 }
 
@@ -456,6 +491,21 @@ def seed_database():
         else:
             cur.execute("SELECT id, username FROM users")
             user_ids = {r["username"]: r["id"] for r in cur.fetchall()}
+
+        # Seed Chat Messages for any unseeded rooms
+        for room_id, messages in COUNTRY_CHAT_SAMPLES.items():
+            cur.execute("SELECT count(*) as count FROM chat_messages WHERE room_id = ?", (room_id,))
+            if cur.fetchone()["count"] == 0:
+                for tag, avatar, rank, country, msg in messages:
+                    uid = 1
+                    for uname, uid_val in user_ids.items():
+                        if uname.lower() in tag.lower():
+                            uid = uid_val
+                            break
+                    cur.execute("""
+                        INSERT INTO chat_messages (room_id, user_id, gamer_tag, avatar, rank, country, message)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, (room_id, uid, tag, avatar, rank, country, msg))
 
         # Seed any missing Squads
         for sq in SAMPLE_SQUADS:
