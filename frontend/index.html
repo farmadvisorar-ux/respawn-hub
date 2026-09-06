@@ -92,6 +92,12 @@
           <span>Gamer Karma</span>
         </a>
 
+        <div class="sidebar-category" style="margin-top: 10px;">Intel & Strategy</div>
+        <a class="nav-link" onclick="switchTab('blogs')" id="nav-blogs">
+          <i class="fa-solid fa-newspaper"></i>
+          <span>Gaming Guides</span>
+        </a>
+
         <div class="sidebar-category" style="margin-top: 10px;">Player</div>
         <a class="nav-link" onclick="switchTab('profile')" id="nav-profile">
           <i class="fa-solid fa-id-card"></i>
@@ -137,6 +143,10 @@
               <label class="form-label">Game</label>
               <select class="select-filter" id="filter-game" onchange="loadSquads()">
                 <option value="All Games">All Games</option>
+                <option value="Fortnite">Fortnite</option>
+                <option value="Minecraft">Minecraft</option>
+                <option value="Roblox">Roblox</option>
+                <option value="Call of Duty">Call of Duty</option>
                 <option value="Valorant">Valorant</option>
                 <option value="CS2">CS2</option>
                 <option value="Apex Legends">Apex Legends</option>
@@ -145,6 +155,8 @@
                 <option value="Rocket League">Rocket League</option>
                 <option value="Overwatch 2">Overwatch 2</option>
                 <option value="Rainbow Six Siege">Rainbow Six Siege</option>
+                <option value="Helldivers 2">Helldivers 2</option>
+                <option value="GTA Online">GTA Online</option>
                 <option value="Dota 2">Dota 2</option>
               </select>
             </div>
@@ -433,6 +445,10 @@
               <div class="form-group">
                 <label class="form-label">Primary Game</label>
                 <select class="form-select" id="profile-primary-game">
+                  <option value="Fortnite">Fortnite</option>
+                  <option value="Minecraft">Minecraft</option>
+                  <option value="Roblox">Roblox</option>
+                  <option value="Call of Duty">Call of Duty</option>
                   <option value="Valorant">Valorant</option>
                   <option value="CS2">CS2</option>
                   <option value="Apex Legends">Apex Legends</option>
@@ -441,6 +457,8 @@
                   <option value="Rocket League">Rocket League</option>
                   <option value="Overwatch 2">Overwatch 2</option>
                   <option value="Rainbow Six Siege">Rainbow Six Siege</option>
+                  <option value="Helldivers 2">Helldivers 2</option>
+                  <option value="GTA Online">GTA Online</option>
                   <option value="Dota 2">Dota 2</option>
                 </select>
               </div>
@@ -486,6 +504,83 @@
           </div>
         </section>
 
+        <!-- TAB 7: GAMING GUIDES & BLOG HUB -->
+        <section class="tab-panel" id="tab-blogs">
+          <!-- View 1: Articles Grid -->
+          <div id="blog-grid-view">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+              <div>
+                <h1 style="font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: 1px;">
+                  GAMING INTEL & SQUAD GUIDES // SEO & LLM HUB
+                </h1>
+                <p style="color: var(--text-muted); font-size: 14px;">
+                  Deep-dive tier lists, meta strategies, and server guides for competitive squad games.
+                </p>
+              </div>
+
+              <!-- Quick Search -->
+              <input type="text" class="form-input" id="search-blogs" placeholder="Search guides, games, loadouts..." style="width: 260px;" oninput="filterBlogsLocally()">
+            </div>
+
+            <!-- Blog Category Pills -->
+            <div style="display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 6px;" id="blog-categories-pills">
+              <button onclick="filterBlogCategory('All')" class="country-chip active" id="pill-all">All Guides</button>
+              <button onclick="filterBlogCategory('Top 15')" class="country-chip" id="pill-top15">Top 15 Lists</button>
+              <button onclick="filterBlogCategory('Top 12')" class="country-chip" id="pill-top12">Top 12 Lists</button>
+              <button onclick="filterBlogCategory('Top 10')" class="country-chip" id="pill-top10">Top 10 Lists</button>
+              <button onclick="filterBlogGame('Minecraft')" class="country-chip" id="pill-mc">⛏️ Minecraft</button>
+              <button onclick="filterBlogGame('Roblox')" class="country-chip" id="pill-roblox">🎮 Roblox</button>
+              <button onclick="filterBlogGame('Warzone')" class="country-chip" id="pill-cod">🎯 Call of Duty</button>
+              <button onclick="filterBlogGame('Fortnite')" class="country-chip" id="pill-fn">⚡ Fortnite</button>
+            </div>
+
+            <!-- Cards Grid -->
+            <div class="blog-grid" id="blogs-container">
+              <!-- Dynamically populated by app.js -->
+            </div>
+          </div>
+
+          <!-- View 2: Article Reader -->
+          <div id="blog-reader-view" style="display: none;">
+            <button onclick="backToBlogList()" style="background: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--neon-cyan); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-arrow-left"></i> BACK TO ALL GUIDES
+            </button>
+
+            <article class="article-reader">
+              <div class="article-header">
+                <span class="blog-badge" id="reader-badge">ARTICLE CATEGORY</span>
+                <h1 class="article-title" id="reader-title">Article Title</h1>
+                <div class="article-meta-bar">
+                  <span><i class="fa-solid fa-user-pen" style="color: var(--neon-cyan);"></i> <span id="reader-author">Author</span></span>
+                  <span>&bull;</span>
+                  <span><i class="fa-solid fa-calendar"></i> <span id="reader-date">Date</span></span>
+                  <span>&bull;</span>
+                  <span><i class="fa-solid fa-clock"></i> <span id="reader-readtime">5 min read</span></span>
+                  <span>&bull;</span>
+                  <span style="color: var(--neon-green);"><i class="fa-solid fa-robot"></i> LLM-Optimized</span>
+                </div>
+              </div>
+
+              <!-- Article Content Body -->
+              <div class="article-body" id="reader-body">
+                <!-- Injected dynamically -->
+              </div>
+
+              <!-- Squad Conversion CTA Card -->
+              <div class="article-squad-cta">
+                <h3 style="font-size: 18px; font-weight: 800; color: white;">Ready to Put These Strategies Into Practice?</h3>
+                <p style="color: #cbd5e1; font-size: 14px; margin-top: 6px;">
+                  Connect with verified, non-toxic players in open squad lobbies right now.
+                </p>
+                <button class="btn-blog-squad" id="reader-btn-find-squad" onclick="findSquadForArticleGame()">
+                  <i class="fa-solid fa-users"></i>
+                  <span id="reader-btn-find-squad-text">FIND A SQUAD FOR THIS GAME</span>
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+
       </main>
     </div>
   </div>
@@ -510,6 +605,10 @@
         <div class="form-group">
           <label class="form-label">Game</label>
           <select class="form-select" id="squad-game">
+            <option value="Fortnite">Fortnite</option>
+            <option value="Minecraft">Minecraft</option>
+            <option value="Roblox">Roblox</option>
+            <option value="Call of Duty">Call of Duty</option>
             <option value="Valorant">Valorant</option>
             <option value="CS2">CS2</option>
             <option value="Apex Legends">Apex Legends</option>
@@ -518,6 +617,8 @@
             <option value="Rocket League">Rocket League</option>
             <option value="Overwatch 2">Overwatch 2</option>
             <option value="Rainbow Six Siege">Rainbow Six Siege</option>
+            <option value="Helldivers 2">Helldivers 2</option>
+            <option value="GTA Online">GTA Online</option>
             <option value="Dota 2">Dota 2</option>
           </select>
         </div>
@@ -831,6 +932,10 @@
           <div class="form-group">
             <label class="form-label">Primary Game</label>
             <select class="form-select" id="reg-game">
+              <option value="Fortnite">Fortnite</option>
+              <option value="Minecraft">Minecraft</option>
+              <option value="Roblox">Roblox</option>
+              <option value="Call of Duty">Call of Duty</option>
               <option value="Valorant">Valorant</option>
               <option value="CS2">CS2</option>
               <option value="Apex Legends">Apex Legends</option>
@@ -839,6 +944,8 @@
               <option value="Rocket League">Rocket League</option>
               <option value="Overwatch 2">Overwatch 2</option>
               <option value="Rainbow Six Siege">Rainbow Six Siege</option>
+              <option value="Helldivers 2">Helldivers 2</option>
+              <option value="GTA Online">GTA Online</option>
               <option value="Dota 2">Dota 2</option>
             </select>
           </div>

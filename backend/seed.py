@@ -366,6 +366,54 @@ SAMPLE_SQUADS = [
         "discord_voice": "",
         "leader_user": "pixelphoenix",
         "members": [("pixelphoenix", "Flex", 1), ("orange_flash", "Support / Healer", 1)]
+    },
+    {
+        "title": "⚡ Fortnite Ranked Squads (Unreal Push / Chapter 6)",
+        "game": "Fortnite",
+        "mode": "Competitive / Ranked",
+        "rank_req": "Champion - Unreal",
+        "mic_req": "Mic Required",
+        "region": "NA (East / West)",
+        "max_players": 4,
+        "discord_voice": "https://discord.gg/respawn-fortnite-na",
+        "leader_user": "vipershot",
+        "members": [("vipershot", "IGL / Shotcaller", 1), ("frostbite_ca", "Entry Fragger", 1)]
+    },
+    {
+        "title": "⛏️ Hypixel Bedwars 4v4v4v4 Win Streak Grind (15+ Winstreak)",
+        "game": "Minecraft",
+        "mode": "Competitive / Ranked",
+        "rank_req": "100+ Star / Iron Prestige",
+        "mic_req": "Mic Required",
+        "region": "NA (East / West)",
+        "max_players": 4,
+        "discord_voice": "https://discord.gg/respawn-mc-bedwars",
+        "leader_user": "frostbite_ca",
+        "members": [("frostbite_ca", "Support / Healer", 1)]
+    },
+    {
+        "title": "Blox Fruits Third Sea Leviathan Hunt & V4 Awakening",
+        "game": "Roblox",
+        "mode": "Casual / Chill",
+        "rank_req": "Lvl 2000+",
+        "mic_req": "Push to Talk",
+        "region": "Asia-Pacific",
+        "max_players": 5,
+        "discord_voice": "https://discord.gg/respawn-roblox-sea",
+        "leader_user": "sakurablade",
+        "members": [("sakurablade", "Flex", 1)]
+    },
+    {
+        "title": "💥 Call of Duty: Black Ops 6 Ranked Search & Destroy 4-Stack",
+        "game": "Call of Duty",
+        "mode": "Competitive / Ranked",
+        "rank_req": "Crimson+",
+        "mic_req": "Mic Required",
+        "region": "EU Central",
+        "max_players": 4,
+        "discord_voice": "https://discord.gg/respawn-cod-eu",
+        "leader_user": "shadowstriker",
+        "members": [("shadowstriker", "Entry Fragger", 1), ("nordicviking", "Sniper / Anchor", 1)]
     }
 ]
 
@@ -373,42 +421,48 @@ def seed_database():
     with get_db_cursor(commit=True) as cur:
         # Check if users already seeded
         cur.execute("SELECT count(*) as count FROM users")
-        if cur.fetchone()["count"] > 0:
-            return  # Already seeded
-        
+        user_count = cur.fetchone()["count"]
         user_ids = {}
-        # Seed users
-        for u in SAMPLE_USERS:
-            pw = hash_password("ProGamer2026!")
-            cur.execute("""
-                INSERT INTO users (
-                    username, email, password_hash, gamer_tag, country,
-                    bio, avatar, primary_game, rank, platform,
-                    mic_status, discord_tag, karma_score, is_online
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-            """, (
-                u["username"], u["email"], pw, u["gamer_tag"], u["country"],
-                u["bio"], u["avatar"], u["primary_game"], u["rank"], u["platform"],
-                u["mic_status"], u["discord_tag"], u["karma_score"]
-            ))
-            user_ids[u["username"]] = cur.lastrowid
-
-        # Seed Chat Messages for 15 countries
-        for room_id, messages in COUNTRY_CHAT_SAMPLES.items():
-            for tag, avatar, rank, country, msg in messages:
-                # Find matching user id
-                uid = 1
-                for uname, uid_val in user_ids.items():
-                    if uname.lower() in tag.lower():
-                        uid = uid_val
-                        break
+        
+        if user_count == 0:
+            # Seed users
+            for u in SAMPLE_USERS:
+                pw = hash_password("ProGamer2026!")
                 cur.execute("""
-                    INSERT INTO chat_messages (room_id, user_id, gamer_tag, avatar, rank, country, message)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (room_id, uid, tag, avatar, rank, country, msg))
+                    INSERT INTO users (
+                        username, email, password_hash, gamer_tag, country,
+                        bio, avatar, primary_game, rank, platform,
+                        mic_status, discord_tag, karma_score, is_online
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+                """, (
+                    u["username"], u["email"], pw, u["gamer_tag"], u["country"],
+                    u["bio"], u["avatar"], u["primary_game"], u["rank"], u["platform"],
+                    u["mic_status"], u["discord_tag"], u["karma_score"]
+                ))
+                user_ids[u["username"]] = cur.lastrowid
 
-        # Seed Squads
+            # Seed Chat Messages for 15 countries
+            for room_id, messages in COUNTRY_CHAT_SAMPLES.items():
+                for tag, avatar, rank, country, msg in messages:
+                    uid = 1
+                    for uname, uid_val in user_ids.items():
+                        if uname.lower() in tag.lower():
+                            uid = uid_val
+                            break
+                    cur.execute("""
+                        INSERT INTO chat_messages (room_id, user_id, gamer_tag, avatar, rank, country, message)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, (room_id, uid, tag, avatar, rank, country, msg))
+        else:
+            cur.execute("SELECT id, username FROM users")
+            user_ids = {r["username"]: r["id"] for r in cur.fetchall()}
+
+        # Seed any missing Squads
         for sq in SAMPLE_SQUADS:
+            cur.execute("SELECT id FROM squads WHERE title = ?", (sq["title"],))
+            if cur.fetchone():
+                continue
+
             leader_id = user_ids.get(sq["leader_user"], 1)
             cur.execute("""
                 INSERT INTO squads (leader_id, title, game, mode, rank_req, mic_req, region, max_players, discord_voice, status)
@@ -422,6 +476,9 @@ def seed_database():
                     INSERT INTO squad_members (squad_id, user_id, role, is_ready)
                     VALUES (?, ?, ?, ?)
                 """, (squad_id, uid, role, ready))
+
+        if user_count > 0:
+            return  # Mutual friendships and DMs already seeded
 
         # Seed some mutual friendships
         pairs = [

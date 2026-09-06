@@ -26,6 +26,10 @@ const state = {
   activeConvoPartnerId: null,
   activeSquad: null,
   squadsList: [],
+  blogsList: [],
+  activeBlogArticle: null,
+  selectedBlogCategory: "All",
+  selectedBlogGame: "All Games",
   // WebSockets
   chatSocket: null,
   userSocket: null,
@@ -89,6 +93,8 @@ function switchTab(tabId) {
     loadKarmaLeaderboard();
   } else if (tabId === "profile") {
     loadProfileSettings();
+  } else if (tabId === "blogs") {
+    loadBlogArticles();
   }
 }
 
@@ -1384,4 +1390,211 @@ function showNotification(text) {
     div.style.transition = "opacity 0.3s ease";
     setTimeout(() => div.remove(), 300);
   }, 4000);
+}
+
+// --- Gaming Guides & SEO/LLM Blog Hub ---
+async function loadBlogArticles() {
+  try {
+    const res = await fetch("/api/blogs");
+    if (res.ok) {
+      state.blogsList = await res.json();
+      filterBlogsLocally();
+    }
+  } catch (err) {
+    console.error("Failed to load blog articles:", err);
+  }
+}
+
+function filterBlogCategory(cat) {
+  state.selectedBlogCategory = cat;
+  state.selectedBlogGame = "All Games";
+  updateBlogPillsUI();
+  filterBlogsLocally();
+}
+
+function filterBlogGame(game) {
+  state.selectedBlogGame = game;
+  state.selectedBlogCategory = "All";
+  updateBlogPillsUI();
+  filterBlogsLocally();
+}
+
+function updateBlogPillsUI() {
+  const pills = document.querySelectorAll("#blog-categories-pills .country-chip");
+  pills.forEach(p => p.classList.remove("active"));
+
+  if (state.selectedBlogCategory !== "All") {
+    if (state.selectedBlogCategory === "Top 15") document.getElementById("pill-top15")?.classList.add("active");
+    else if (state.selectedBlogCategory === "Top 12") document.getElementById("pill-top12")?.classList.add("active");
+    else if (state.selectedBlogCategory === "Top 10") document.getElementById("pill-top10")?.classList.add("active");
+  } else if (state.selectedBlogGame !== "All Games") {
+    if (state.selectedBlogGame === "Minecraft") document.getElementById("pill-mc")?.classList.add("active");
+    else if (state.selectedBlogGame === "Roblox") document.getElementById("pill-roblox")?.classList.add("active");
+    else if (state.selectedBlogGame === "Warzone") document.getElementById("pill-cod")?.classList.add("active");
+    else if (state.selectedBlogGame === "Fortnite") document.getElementById("pill-fn")?.classList.add("active");
+  } else {
+    document.getElementById("pill-all")?.classList.add("active");
+  }
+}
+
+function filterBlogsLocally() {
+  const q = (document.getElementById("search-blogs")?.value || "").toLowerCase().trim();
+  let filtered = state.blogsList || [];
+
+  if (state.selectedBlogCategory && state.selectedBlogCategory !== "All") {
+    filtered = filtered.filter(b => b.category.toLowerCase() === state.selectedBlogCategory.toLowerCase());
+  }
+
+  if (state.selectedBlogGame && state.selectedBlogGame !== "All Games") {
+    filtered = filtered.filter(b => b.game_tag.toLowerCase() === state.selectedBlogGame.toLowerCase() || b.game_tag === "All Games");
+  }
+
+  if (q) {
+    filtered = filtered.filter(b => 
+      b.title.toLowerCase().includes(q) ||
+      b.meta_description.toLowerCase().includes(q) ||
+      (b.target_keywords && b.target_keywords.some(k => k.toLowerCase().includes(q))) ||
+      (b.llm_summary && b.llm_summary.toLowerCase().includes(q))
+    );
+  }
+
+  renderBlogGrid(filtered);
+}
+
+function renderBlogGrid(articles) {
+  const container = document.getElementById("blogs-container");
+  if (!container) return;
+
+  if (!articles || articles.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-dim);">
+        <i class="fa-solid fa-book-open fa-3x" style="margin-bottom: 16px; opacity: 0.4;"></i>
+        <h3 style="font-size: 18px; color: var(--text-muted); margin-bottom: 8px;">No Guides Found</h3>
+        <p style="font-size: 13px;">Try selecting another category or clear your search filter.</p>
+        <button class="country-chip active" onclick="filterBlogCategory('All')" style="margin: 16px auto 0;">View All Guides</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = articles.map(a => `
+    <div class="blog-card" onclick="viewBlogArticle('${a.slug}')">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <span class="blog-badge">${a.banner_badge}</span>
+        <span style="font-size: 11px; color: var(--neon-cyan); background: rgba(0, 242, 254, 0.08); padding: 3px 8px; border-radius: 4px; font-weight: 700;">
+          ${a.game_tag}
+        </span>
+      </div>
+
+      <h2 class="blog-card-title">${escapeHTML(a.title)}</h2>
+      <p class="blog-card-desc">${escapeHTML(a.meta_description)}</p>
+
+      <div style="background: rgba(0,0,0,0.25); border-left: 3px solid var(--neon-cyan); padding: 10px 12px; border-radius: 6px; margin-bottom: 16px;">
+        <div style="font-size: 11px; font-weight: 800; color: var(--neon-cyan); margin-bottom: 4px; text-transform: uppercase;">
+          <i class="fa-solid fa-robot"></i> LLM Summary Preview
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+          ${escapeHTML(a.llm_summary)}
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px;">
+        ${(a.target_keywords || []).slice(0, 3).map(k => `
+          <span style="font-size: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 2px 6px; border-radius: 4px;">#${escapeHTML(k)}</span>
+        `).join("")}
+      </div>
+
+      <div class="blog-card-footer">
+        <div>
+          <span style="color: var(--text-main); font-weight: 700;">${escapeHTML(a.author)}</span>
+          <span style="margin: 0 4px;">&bull;</span>
+          <span>${a.read_time}</span>
+        </div>
+        <span style="color: var(--neon-cyan); font-weight: 700; display: flex; align-items: center; gap: 6px;">
+          READ GUIDE <i class="fa-solid fa-arrow-right fa-xs"></i>
+        </span>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function viewBlogArticle(slug) {
+  try {
+    const res = await fetch(`/api/blogs/${slug}`);
+    if (!res.ok) {
+      alert("Failed to load article");
+      return;
+    }
+    const data = await res.json();
+    const article = data.article || data;
+    state.activeBlogArticle = article;
+
+    // Populate Reader View elements
+    document.getElementById("reader-badge").innerText = article.banner_badge;
+    document.getElementById("reader-title").innerText = article.title;
+    document.getElementById("reader-author").innerText = article.author;
+    document.getElementById("reader-date").innerText = article.published_at;
+    document.getElementById("reader-readtime").innerText = article.read_time;
+    document.getElementById("reader-body").innerHTML = article.content_html;
+
+    const squadBtnText = document.getElementById("reader-btn-find-squad-text");
+    if (squadBtnText) {
+      const tag = article.game_tag === "All Games" ? "COMPETITIVE" : article.game_tag.toUpperCase();
+      squadBtnText.innerText = `FIND A SQUAD FOR ${tag}`;
+    }
+
+    // Inject/Update dynamic Schema.org JSON-LD tag for search engine bots & LLMs
+    let jsonLdScript = document.getElementById("article-json-ld");
+    if (!jsonLdScript) {
+      jsonLdScript = document.createElement("script");
+      jsonLdScript.id = "article-json-ld";
+      jsonLdScript.type = "application/ld+json";
+      document.head.appendChild(jsonLdScript);
+    }
+    if (article.schema_data) {
+      jsonLdScript.text = JSON.stringify(article.schema_data);
+    }
+
+    // Toggle views
+    document.getElementById("blog-grid-view").style.display = "none";
+    document.getElementById("blog-reader-view").style.display = "block";
+
+    // Play click sound and scroll to top
+    window.audioManager.playClick();
+    const mainView = document.querySelector(".main-view");
+    if (mainView) mainView.scrollTop = 0;
+    else window.scrollTo({ top: 0, behavior: "smooth" });
+
+  } catch (err) {
+    console.error("Failed to fetch article:", err);
+    alert("Network error loading article");
+  }
+}
+
+function backToBlogList() {
+  document.getElementById("blog-reader-view").style.display = "none";
+  document.getElementById("blog-grid-view").style.display = "block";
+  window.audioManager.playClick();
+}
+
+function findSquadForArticleGame() {
+  if (!state.activeBlogArticle) return;
+  const game = state.activeBlogArticle.game_tag;
+
+  // Switch to Squads tab
+  switchTab("squads");
+
+  // Select game filter if applicable
+  const filterSelect = document.getElementById("filter-game");
+  if (filterSelect && game && game !== "All Games") {
+    for (let opt of filterSelect.options) {
+      if (opt.value.toLowerCase() === game.toLowerCase() || opt.text.toLowerCase().includes(game.toLowerCase())) {
+        filterSelect.value = opt.value;
+        break;
+      }
+    }
+  } else if (filterSelect) {
+    filterSelect.value = "All Games";
+  }
+  loadSquads();
 }

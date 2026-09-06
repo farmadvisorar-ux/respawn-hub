@@ -14,6 +14,7 @@ from backend.database import init_db, get_db_cursor
 from backend.auth import hash_password, verify_password, create_session, get_current_user, get_optional_user
 from backend.countries import COUNTRIES, COUNTRY_MAP
 from backend.seed import seed_database
+from backend.blogs import BLOG_ARTICLES, BLOG_MAP
 
 # --- Connection Manager for WebSockets ---
 class ConnectionManager:
@@ -819,6 +820,55 @@ def get_platform_stats():
         "active_squads": active_squads,
         "chat_messages": total_msgs,
         "regional_rooms": 15
+    }
+
+# --- Gaming Guides & SEO Blog Hub ---
+@app.get("/api/blogs")
+def list_blogs(category: Optional[str] = None, game: Optional[str] = None, q: Optional[str] = None):
+    articles = BLOG_ARTICLES
+    if category and category != "All":
+        articles = [a for a in articles if a["category"].lower() == category.lower()]
+    if game and game != "All Games":
+        articles = [a for a in articles if a["game_tag"].lower() == game.lower() or a["game_tag"] == "All Games"]
+    if q:
+        query = q.lower()
+        articles = [a for a in articles if query in a["title"].lower() or query in a["meta_description"].lower() or any(query in k.lower() for k in a["target_keywords"])]
+
+    # Return list without full content_html for bandwidth efficiency
+    summary_list = []
+    for a in articles:
+        summary_list.append({
+            "slug": a["slug"],
+            "title": a["title"],
+            "meta_description": a["meta_description"],
+            "category": a["category"],
+            "game_tag": a["game_tag"],
+            "target_keywords": a["target_keywords"],
+            "author": a["author"],
+            "published_at": a["published_at"],
+            "read_time": a["read_time"],
+            "banner_badge": a["banner_badge"],
+            "llm_summary": a["llm_summary"]
+        })
+    return summary_list
+
+@app.get("/api/blogs/{slug}")
+def get_blog_article(slug: str):
+    article = BLOG_MAP.get(slug)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    # Also fetch any active squad lobbies matching this game tag
+    game_tag = article.get("game_tag")
+    matching_squads = []
+    if game_tag and game_tag != "All Games":
+        with get_db_cursor(commit=False) as cur:
+            cur.execute("SELECT s.*, u.gamer_tag as leader_tag, u.avatar as leader_avatar FROM squads s JOIN users u ON s.leader_id = u.id WHERE s.game = ? AND s.status = 'open' LIMIT 3", (game_tag,))
+            matching_squads = [dict(r) for r in cur.fetchall()]
+
+    return {
+        "article": article,
+        "related_squads": matching_squads
     }
 
 # --- WebSockets for Chat, Squads, and DMs ---

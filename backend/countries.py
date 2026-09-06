@@ -8,7 +8,7 @@ COUNTRIES = [
         "flag": "🇺🇸",
         "region": "NA (East / West)",
         "hub": "Ashburn / Silicon Valley",
-        "popular_games": ["Valorant", "Apex Legends", "Call of Duty", "Fortnite"],
+        "popular_games": ["Valorant", "Fortnite", "Call of Duty", "Roblox", "Minecraft"],
         "tagline": "NA Ranked Grind & College Esports"
     },
     {
@@ -18,7 +18,7 @@ COUNTRIES = [
         "flag": "🇬🇧",
         "region": "EU West",
         "hub": "London",
-        "popular_games": ["CS2", "Valorant", "Rocket League", "EA FC"],
+        "popular_games": ["CS2", "Fortnite", "Call of Duty", "Minecraft", "Rocket League"],
         "tagline": "UK LFG & Competitive Ladders"
     },
     {
@@ -28,7 +28,7 @@ COUNTRIES = [
         "flag": "🇨🇦",
         "region": "NA North",
         "hub": "Montreal / Toronto / Vancouver",
-        "popular_games": ["Valorant", "CS2", "Overwatch 2", "Apex Legends"],
+        "popular_games": ["Valorant", "Call of Duty", "Minecraft", "Apex Legends", "Fortnite"],
         "tagline": "Chill Vibes & Competitive Scrims"
     },
     {
@@ -38,7 +38,7 @@ COUNTRIES = [
         "flag": "🇩🇪",
         "region": "EU Central",
         "hub": "Frankfurt",
-        "popular_games": ["CS2", "League of Legends", "Rainbow Six Siege", "Valorant"],
+        "popular_games": ["CS2", "Minecraft", "Rainbow Six Siege", "Valorant", "Fortnite"],
         "tagline": "DACH Esports & Tactical Squads"
     },
     {
