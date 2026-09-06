@@ -566,15 +566,28 @@
               <button onclick="filterBlogCategory('Top 15')" class="country-chip" id="pill-top15">Top 15 Lists</button>
               <button onclick="filterBlogCategory('Top 12')" class="country-chip" id="pill-top12">Top 12 Lists</button>
               <button onclick="filterBlogCategory('Top 10')" class="country-chip" id="pill-top10">Top 10 Lists</button>
+              <button onclick="filterBlogGame('Fortnite')" class="country-chip" id="pill-fn">⚡ Fortnite</button>
               <button onclick="filterBlogGame('Minecraft')" class="country-chip" id="pill-mc">⛏️ Minecraft</button>
               <button onclick="filterBlogGame('Roblox')" class="country-chip" id="pill-roblox">🎮 Roblox</button>
-              <button onclick="filterBlogGame('Warzone')" class="country-chip" id="pill-cod">🎯 Call of Duty</button>
-              <button onclick="filterBlogGame('Fortnite')" class="country-chip" id="pill-fn">⚡ Fortnite</button>
+              <button onclick="filterBlogGame('Warzone')" class="country-chip" id="pill-cod">🎯 Warzone / COD</button>
+              <button onclick="filterBlogGame('Valorant')" class="country-chip" id="pill-val">👑 Valorant</button>
+              <button onclick="filterBlogGame('CS2')" class="country-chip" id="pill-cs2">💣 CS2</button>
+              <button onclick="filterBlogGame('Apex Legends')" class="country-chip" id="pill-apex">🏆 Apex Legends</button>
+              <button onclick="filterBlogGame('League of Legends')" class="country-chip" id="pill-lol">⚔️ LoL</button>
+              <button onclick="filterBlogGame('Rocket League')" class="country-chip" id="pill-rl">🚗 Rocket League</button>
             </div>
 
             <!-- Cards Grid -->
             <div class="blog-grid" id="blogs-container">
               <!-- Dynamically populated by app.js -->
+            </div>
+
+            <!-- Pagination / Load More Button -->
+            <div id="blogs-pagination-wrapper" style="text-align: center; margin: 32px 0 24px 0; display: none;">
+              <button class="btn-load-more" id="btn-load-more-blogs" onclick="loadMoreBlogArticles()">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span id="load-more-text">LOAD MORE GUIDES</span>
+              </button>
             </div>
           </div>
 
@@ -621,6 +634,33 @@
 
       </main>
     </div>
+
+    <!-- Mobile Bottom Navigation Bar (Visible on mobile <= 768px) -->
+    <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+      <button class="mobile-nav-item active" onclick="switchTab('squads')" id="mobile-nav-squads">
+        <i class="fa-solid fa-users"></i>
+        <span>Squads</span>
+      </button>
+      <button class="mobile-nav-item" onclick="switchTab('chat')" id="mobile-nav-chat">
+        <i class="fa-solid fa-comments"></i>
+        <span>Chat</span>
+      </button>
+      <button class="mobile-nav-item" onclick="switchTab('dms')" id="mobile-nav-dms">
+        <div style="position: relative; display: inline-block;">
+          <i class="fa-solid fa-message"></i>
+          <span class="mobile-nav-badge" id="mobile-dm-badge" style="display: none;">0</span>
+        </div>
+        <span>DMs</span>
+      </button>
+      <button class="mobile-nav-item" onclick="switchTab('blogs')" id="mobile-nav-blogs">
+        <i class="fa-solid fa-newspaper"></i>
+        <span>Guides</span>
+      </button>
+      <button class="mobile-nav-item" onclick="switchTab('profile')" id="mobile-nav-profile">
+        <i class="fa-solid fa-id-card"></i>
+        <span>Profile</span>
+      </button>
+    </nav>
   </div>
 
   <!-- MODAL 1: CREATE SQUAD LOBBY -->

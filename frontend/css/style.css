@@ -1107,3 +1107,334 @@ body {
   transform: translateY(-2px);
 }
 
+/* Pagination / Load More Button */
+.btn-load-more {
+  background: var(--bg-surface);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 12px 32px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+}
+
+.btn-load-more:hover {
+  background: var(--neon-cyan);
+  color: #07090e;
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Mobile Bottom Navigation Bar (Visible on mobile <= 768px) */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(10, 14, 22, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-subtle);
+  z-index: 999;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 8px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.7);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  flex: 1;
+  min-height: 48px;
+}
+
+.mobile-nav-item i {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.mobile-nav-item:hover,
+.mobile-nav-item.active {
+  color: var(--neon-cyan);
+}
+
+.mobile-nav-item.active i {
+  transform: scale(1.15);
+  color: var(--neon-cyan);
+  text-shadow: 0 0 10px var(--neon-cyan);
+}
+
+.mobile-nav-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: var(--neon-coral);
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.5);
+}
+
+/* ==========================================================================
+   Responsive Mobile Media Queries
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* App Shell & Main wrapper adjustments */
+  .app-shell {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .main-wrapper {
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Hide Desktop Sidebar on Mobile */
+  .nav-sidebar {
+    display: none !important;
+  }
+
+  /* Show Mobile Bottom Navigation */
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+
+  /* Content area padding for mobile bottom nav */
+  .content-area {
+    padding-bottom: 74px !important;
+  }
+
+  .tab-panel {
+    padding: 16px 12px !important;
+  }
+
+  /* Top Nav adjustments */
+  .top-nav {
+    padding: 0 14px;
+    height: 56px;
+  }
+
+  .logo-glitch {
+    font-size: 19px;
+    letter-spacing: 1px;
+  }
+
+  .logo-tag {
+    display: none;
+  }
+
+  .telemetry-strip {
+    display: none;
+  }
+
+  .nav-actions {
+    gap: 8px;
+  }
+
+  .btn-squad-create {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Grids to single column */
+  .blog-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  #squad-grid-container {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  #friends-grid,
+  #karma-gamers-list {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Article Reader on Mobile */
+  .article-reader {
+    padding: 20px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .article-title {
+    font-size: clamp(20px, 5.5vw, 28px) !important;
+    line-height: 1.3 !important;
+  }
+
+  .article-meta-bar {
+    gap: 8px !important;
+    font-size: 11px !important;
+  }
+
+  .article-body h2 {
+    font-size: 19px !important;
+    margin: 24px 0 12px 0 !important;
+  }
+
+  .article-body h3 {
+    font-size: 16px !important;
+  }
+
+  .article-body p,
+  .article-body li {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Tables horizontal scroll with touch momentum */
+  .table-responsive {
+    margin: 16px 0 !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .seo-table {
+    font-size: 12px !important;
+    min-width: 520px;
+  }
+
+  .seo-table th,
+  .seo-table td {
+    padding: 10px 12px !important;
+  }
+
+  /* Horizontal touch scrolling */
+  .countries-bar,
+  #blog-categories-pills {
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .country-chip {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+
+  /* Modals */
+  .modal-card {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    max-height: 92vh !important;
+    padding: 20px 16px !important;
+    margin: 10px !important;
+  }
+
+  .btn-join,
+  .btn-submit {
+    touch-action: manipulation;
+    min-height: 42px;
+  }
+}
+
+/* Small Mobile Phones <= 480px */
+@media (max-width: 480px) {
+  .top-nav {
+    padding: 0 10px;
+    height: 52px;
+  }
+
+  .logo-glitch {
+    font-size: 17px;
+  }
+
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  #search-blogs {
+    width: 100% !important;
+    margin-top: 8px;
+  }
+
+  #blog-grid-view > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  #tab-squads > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+
+  #tab-squads .btn-squad-create {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .squad-footer {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch !important;
+  }
+
+  .squad-footer .btn-join {
+    width: 100%;
+    text-align: center;
+  }
+
+  .mobile-bottom-nav {
+    height: 58px;
+  }
+
+  .mobile-nav-item {
+    font-size: 9px;
+    padding: 6px 4px;
+  }
+
+  .mobile-nav-item i {
+    font-size: 16px;
+  }
+
+  .btn-load-more {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+  }
+}
+
+

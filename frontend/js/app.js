@@ -78,11 +78,14 @@ function switchTab(tabId) {
   state.currentTab = tabId;
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
+  document.querySelectorAll(".mobile-nav-item").forEach(m => m.classList.remove("active"));
 
   const targetPanel = document.getElementById(`tab-${tabId}`);
   const targetNav = document.getElementById(`nav-${tabId}`);
+  const targetMobileNav = document.getElementById(`mobile-nav-${tabId}`);
   if (targetPanel) targetPanel.classList.add("active");
   if (targetNav) targetNav.classList.add("active");
+  if (targetMobileNav) targetMobileNav.classList.add("active");
 
   window.audioManager.playClick();
 
@@ -91,6 +94,10 @@ function switchTab(tabId) {
   } else if (tabId === "squads") {
     loadSquads();
   } else if (tabId === "dms") {
+    const badge = document.getElementById("dm-unread-badge");
+    const mobileBadge = document.getElementById("mobile-dm-badge");
+    if (badge) { badge.innerText = "0"; badge.style.display = "none"; }
+    if (mobileBadge) { mobileBadge.innerText = "0"; mobileBadge.style.display = "none"; }
     loadDMConversations();
   } else if (tabId === "friends") {
     loadFriends();
@@ -1142,9 +1149,16 @@ function handleIncomingDM(msg) {
   } else {
     showNotification(`New DM from ${msg.sender_tag}: "${msg.message.slice(0, 30)}..."`);
     const badge = document.getElementById("dm-unread-badge");
-    const cur = parseInt(badge.innerText || "0") + 1;
-    badge.innerText = cur;
-    badge.style.display = "inline-block";
+    const mobileBadge = document.getElementById("mobile-dm-badge");
+    const cur = parseInt((badge?.innerText) || "0") + 1;
+    if (badge) {
+      badge.innerText = cur;
+      badge.style.display = "inline-block";
+    }
+    if (mobileBadge) {
+      mobileBadge.innerText = cur;
+      mobileBadge.style.display = "inline-block";
+    }
   }
 }
 
@@ -1548,6 +1562,7 @@ async function loadBlogArticles() {
     const res = await fetch("/api/blogs");
     if (res.ok) {
       state.blogsList = await res.json();
+      state.blogCurrentCount = 12;
       filterBlogsLocally();
     }
   } catch (err) {
@@ -1558,6 +1573,7 @@ async function loadBlogArticles() {
 function filterBlogCategory(cat) {
   state.selectedBlogCategory = cat;
   state.selectedBlogGame = "All Games";
+  state.blogCurrentCount = 12;
   updateBlogPillsUI();
   filterBlogsLocally();
 }
@@ -1565,6 +1581,7 @@ function filterBlogCategory(cat) {
 function filterBlogGame(game) {
   state.selectedBlogGame = game;
   state.selectedBlogCategory = "All";
+  state.blogCurrentCount = 12;
   updateBlogPillsUI();
   filterBlogsLocally();
 }
@@ -1578,10 +1595,15 @@ function updateBlogPillsUI() {
     else if (state.selectedBlogCategory === "Top 12") document.getElementById("pill-top12")?.classList.add("active");
     else if (state.selectedBlogCategory === "Top 10") document.getElementById("pill-top10")?.classList.add("active");
   } else if (state.selectedBlogGame !== "All Games") {
-    if (state.selectedBlogGame === "Minecraft") document.getElementById("pill-mc")?.classList.add("active");
+    if (state.selectedBlogGame === "Fortnite") document.getElementById("pill-fn")?.classList.add("active");
+    else if (state.selectedBlogGame === "Minecraft") document.getElementById("pill-mc")?.classList.add("active");
     else if (state.selectedBlogGame === "Roblox") document.getElementById("pill-roblox")?.classList.add("active");
     else if (state.selectedBlogGame === "Warzone") document.getElementById("pill-cod")?.classList.add("active");
-    else if (state.selectedBlogGame === "Fortnite") document.getElementById("pill-fn")?.classList.add("active");
+    else if (state.selectedBlogGame === "Valorant") document.getElementById("pill-val")?.classList.add("active");
+    else if (state.selectedBlogGame === "CS2") document.getElementById("pill-cs2")?.classList.add("active");
+    else if (state.selectedBlogGame === "Apex Legends") document.getElementById("pill-apex")?.classList.add("active");
+    else if (state.selectedBlogGame === "League of Legends") document.getElementById("pill-lol")?.classList.add("active");
+    else if (state.selectedBlogGame === "Rocket League") document.getElementById("pill-rl")?.classList.add("active");
   } else {
     document.getElementById("pill-all")?.classList.add("active");
   }
@@ -1608,11 +1630,14 @@ function filterBlogsLocally() {
     );
   }
 
+  state.currentFilteredBlogs = filtered;
   renderBlogGrid(filtered);
 }
 
 function renderBlogGrid(articles) {
   const container = document.getElementById("blogs-container");
+  const paginationWrapper = document.getElementById("blogs-pagination-wrapper");
+  const loadMoreText = document.getElementById("load-more-text");
   if (!container) return;
 
   if (!articles || articles.length === 0) {
@@ -1624,14 +1649,18 @@ function renderBlogGrid(articles) {
         <button class="country-chip active" onclick="filterBlogCategory('All')" style="margin: 16px auto 0;">View All Guides</button>
       </div>
     `;
+    if (paginationWrapper) paginationWrapper.style.display = "none";
     return;
   }
 
-  container.innerHTML = articles.map(a => `
+  const countToShow = state.blogCurrentCount || 12;
+  const sliced = articles.slice(0, countToShow);
+
+  container.innerHTML = sliced.map(a => `
     <div class="blog-card" onclick="viewBlogArticle('${a.slug}')">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
         <span class="blog-badge">${a.banner_badge}</span>
-        <span style="font-size: 11px; color: var(--neon-cyan); background: rgba(0, 242, 254, 0.08); padding: 3px 8px; border-radius: 4px; font-weight: 700;">
+        <span style="font-size: 11px; color: var(--neon-cyan); background: rgba(0, 242, 254, 0.08); padding: 3px 8px; border-radius: 4px; font-weight: 700; white-space: nowrap;">
           ${a.game_tag}
         </span>
       </div>
@@ -1666,6 +1695,25 @@ function renderBlogGrid(articles) {
       </div>
     </div>
   `).join("");
+
+  // Update Pagination Button visibility and counter
+  if (paginationWrapper) {
+    if (articles.length > countToShow) {
+      paginationWrapper.style.display = "block";
+      const remaining = articles.length - countToShow;
+      if (loadMoreText) {
+        loadMoreText.innerText = `LOAD MORE GUIDES (${remaining} REMAINING)`;
+      }
+    } else {
+      paginationWrapper.style.display = "none";
+    }
+  }
+}
+
+function loadMoreBlogArticles() {
+  state.blogCurrentCount = (state.blogCurrentCount || 12) + 12;
+  window.audioManager?.playClick();
+  renderBlogGrid(state.currentFilteredBlogs || state.blogsList);
 }
 
 async function viewBlogArticle(slug) {
