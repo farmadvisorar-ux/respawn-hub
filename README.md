@@ -1,12 +1,13 @@
 # 🎯 RESPAWN // SQUADFINDER
 ### Enterprise-Grade Gamer Matchmaking & Squad Hub
 
-[![CI / CD](https://github.com/respawn-gaming/respawn-hub/actions/workflows/deploy.yml/badge.svg)](https://github.com)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/farmadvisorar-ux/respawn-hub)
 [![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](https://opensource.org/licenses/MIT)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.141+-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Python 3.14](https://img.shields.io/badge/Python-3.14+-3776AB.svg?logo=python)](https://python.org)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker)](https://docker.com)
 
-> Built by competitive players for competitive and casual gamers. Zero-lag matchmaking, universal regional nationality rooms, instant squads, private encrypted DMs, friend presence, and peer karma endorsements to eradicate toxicity.
+> Built by competitive players for competitive and casual gamers. Zero-lag matchmaking, 15 national hubs, 7 world language rooms, instant squads (Fortnite, Minecraft, Roblox, Call of Duty, Valorant, CS2), private encrypted DMs, friend presence, peer karma endorsements to eradicate toxicity, and an SEO/LLM gaming guides hub.
 
 ---
 
