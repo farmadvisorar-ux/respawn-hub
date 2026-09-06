@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RESPAWN // Enterprise Gamer Matchmaking & Squad Finder</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <div class="app-shell">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="logo-wrap" onclick="switchTab('squads')">
+        <i class="fa-solid fa-crosshairs fa-xl" style="color: var(--neon-cyan);"></i>
+        <span class="logo-glitch">RESPAWN</span>
+        <span class="logo-tag">SQUADFINDER</span>
+      </div>
+
+      <!-- Live Platform Telemetry -->
+      <div class="telemetry-strip">
+        <div class="telemetry-item">
+          <div class="telemetry-dot"></div>
+          <span style="font-weight: 700; color: var(--neon-green);" id="stat-online-gamers">24</span>
+          <span style="color: var(--text-muted);">Players Online</span>
+        </div>
+        <div class="telemetry-item">
+          <i class="fa-solid fa-users" style="color: var(--neon-purple); font-size: 11px;"></i>
+          <span style="font-weight: 700;" id="stat-active-squads">6</span>
+          <span style="color: var(--text-muted);">Lobbies Open</span>
+        </div>
+        <div class="telemetry-item">
+          <i class="fa-solid fa-earth-americas" style="color: var(--neon-cyan); font-size: 11px;"></i>
+          <span style="font-weight: 700;">15</span>
+          <span style="color: var(--text-muted);">Nations Active</span>
+        </div>
+      </div>
+
+      <!-- User Controls & CTA -->
+      <div class="nav-actions">
+        <button class="btn-icon" id="btn-audio-toggle" title="Toggle Sound FX" onclick="toggleSound()">
+          <i class="fa-solid fa-volume-high" id="audio-icon"></i>
+        </button>
+
+        <button class="btn-squad-create" onclick="openCreateSquadModal()">
+          <i class="fa-solid fa-plus"></i>
+          <span>CREATE SQUAD</span>
+        </button>
+
+        <!-- Profile Pill / Login CTA -->
+        <div id="auth-nav-container">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </div>
+    </header>
+
+    <!-- Main App Body -->
+    <div class="main-wrapper">
+      <!-- Sidebar Navigation -->
+      <aside class="nav-sidebar">
+        <div class="sidebar-category">Matchmaking</div>
+        <a class="nav-link active" onclick="switchTab('squads')" id="nav-squads">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Squad Finder</span>
+        </a>
+        <a class="nav-link" onclick="switchTab('chat')" id="nav-chat">
+          <i class="fa-solid fa-globe"></i>
+          <span>15 Flag Hub</span>
+        </a>
+
+        <div class="sidebar-category" style="margin-top: 10px;">Comms & Social</div>
+        <a class="nav-link" onclick="switchTab('dms')" id="nav-dms">
+          <i class="fa-solid fa-message"></i>
+          <span>Direct Messages</span>
+          <span class="nav-badge" id="dm-unread-badge" style="display: none;">0</span>
+        </a>
+        <a class="nav-link" onclick="switchTab('friends')" id="nav-friends">
+          <i class="fa-solid fa-user-group"></i>
+          <span>Friends List</span>
+          <span class="nav-badge" id="friend-req-badge" style="display: none;">0</span>
+        </a>
+        <a class="nav-link" onclick="switchTab('karma')" id="nav-karma">
+          <i class="fa-solid fa-medal"></i>
+          <span>Gamer Karma</span>
+        </a>
+
+        <div class="sidebar-category" style="margin-top: 10px;">Player</div>
+        <a class="nav-link" onclick="switchTab('profile')" id="nav-profile">
+          <i class="fa-solid fa-id-card"></i>
+          <span>My Profile</span>
+        </a>
+
+        <!-- Current Active Squad Dock (if in a squad) -->
+        <div id="active-squad-dock" style="margin-top: auto; display: none; background: rgba(0, 242, 254, 0.08); border: 1px solid var(--border-glow); border-radius: 10px; padding: 12px;">
+          <div style="font-size: 11px; font-weight: 800; color: var(--neon-cyan); margin-bottom: 6px; text-transform: uppercase;">
+            <i class="fa-solid fa-satellite-dish"></i> IN ACTIVE SQUAD
+          </div>
+          <div id="dock-squad-title" style="font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px;">
+            Squad Title
+          </div>
+          <button onclick="openActiveSquadModal()" style="width: 100%; background: var(--neon-cyan); color: #07090e; font-size: 11px; font-weight: 800; padding: 6px; border: none; border-radius: 6px; cursor: pointer;">
+            OPEN LOBBY
+          </button>
+        </div>
+      </aside>
+
+      <!-- Dynamic Content Area -->
+      <main class="content-area">
+
+        <!-- TAB 1: SQUAD FINDER (LFG) -->
+        <section class="tab-panel active" id="tab-squads">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+            <div>
+              <h1 style="font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: 1px;">
+                SQUAD FINDER // LIVE LOBBIES
+              </h1>
+              <p style="color: var(--text-muted); font-size: 14px;">
+                Connect with locked-in teammates, review mic requirements, and queue up with zero tilt.
+              </p>
+            </div>
+            <button class="btn-squad-create" onclick="openCreateSquadModal()">
+              <i class="fa-solid fa-plus"></i> CREATE LOBBY
+            </button>
+          </div>
+
+          <!-- Squad Filter Bar -->
+          <div class="filter-bar">
+            <div>
+              <label class="form-label">Game</label>
+              <select class="select-filter" id="filter-game" onchange="loadSquads()">
+                <option value="All Games">All Games</option>
+                <option value="Valorant">Valorant</option>
+                <option value="CS2">CS2</option>
+                <option value="Apex Legends">Apex Legends</option>
+                <option value="League of Legends">League of Legends</option>
+                <option value="Warzone">Warzone</option>
+                <option value="Rocket League">Rocket League</option>
+                <option value="Overwatch 2">Overwatch 2</option>
+                <option value="Rainbow Six Siege">Rainbow Six Siege</option>
+                <option value="Dota 2">Dota 2</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="form-label">Mode</label>
+              <select class="select-filter" id="filter-mode" onchange="loadSquads()">
+                <option value="All Modes">All Modes</option>
+                <option value="Competitive / Ranked">Competitive / Ranked</option>
+                <option value="Casual / Chill">Casual / Chill</option>
+                <option value="Tournament / Scrims">Tournament / Scrims</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="form-label">Region</label>
+              <select class="select-filter" id="filter-region" onchange="loadSquads()">
+                <option value="All Regions">All Regions</option>
+                <option value="NA (East / West)">NA (East / West)</option>
+                <option value="EU West">EU West</option>
+                <option value="EU Central">EU Central</option>
+                <option value="Asia-Pacific">Asia-Pacific</option>
+                <option value="East Asia">East Asia</option>
+                <option value="South America">South America</option>
+                <option value="Oceania">Oceania</option>
+                <option value="Latin America North">Latin America North</option>
+              </select>
+            </div>
+
+            <div style="margin-left: auto;">
+              <label class="form-label">Quick Search</label>
+              <input type="text" class="form-input" id="search-squads" placeholder="Search by title, leader, rank..." style="width: 260px;" oninput="filterSquadsLocally()">
+            </div>
+          </div>
+
+          <!-- Squad Cards Grid -->
+          <div class="squad-grid" id="squad-grid-container">
+            <!-- Populated dynamically by app.js -->
+          </div>
+        </section>
+
+        <!-- TAB 2: 15 NATIONAL FLAG CHAT ROOMS -->
+        <section class="tab-panel" id="tab-chat">
+          <div style="margin-bottom: 16px;">
+            <h1 style="font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: 1px;">
+              UNIVERSAL REGIONAL CHAT // 15 NATIONAL HUBS
+            </h1>
+            <p style="color: var(--text-muted); font-size: 14px;">
+              Hop into real-time nationality chat rooms to find local duos, discuss server routing, and talk games.
+            </p>
+          </div>
+
+          <!-- 15 Country Flag Carousel / Chips -->
+          <div class="countries-bar" id="countries-chips-container">
+            <!-- Populated dynamically with 15 country flags -->
+          </div>
+
+          <!-- Live Chat Container -->
+          <div class="chat-container">
+            <div class="chat-header">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <span id="active-chat-flag" style="font-size: 28px;">🇺🇸</span>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="active-chat-name" style="font-size: 16px; font-weight: 800;">United States Hub</span>
+                    <span class="chip-online" id="active-chat-online"><i class="fa-solid fa-circle fa-2xs"></i> 14 Gamers Online</span>
+                  </div>
+                  <div id="active-chat-tagline" style="font-size: 12px; color: var(--text-muted);">
+                    NA Ranked Grind & College Esports
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-icon" title="Refresh Feed" onclick="refreshActiveRoomChat()">
+                  <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="chat-messages-wrap" id="chat-messages-stream">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Quick Gamer Phrases -->
+            <div style="display: flex; gap: 8px; padding: 6px 20px; background: rgba(0,0,0,0.2); overflow-x: auto;">
+              <button onclick="insertQuickPhrase('Looking for +1 duo with mic right now!')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 11px; padding: 3px 10px; border-radius: 12px; cursor: pointer; white-space: nowrap;">
+                🎯 Looking for duo
+              </button>
+              <button onclick="insertQuickPhrase('Anyone playing comp tonight? Add me!')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 11px; padding: 3px 10px; border-radius: 12px; cursor: pointer; white-space: nowrap;">
+                ⚡ Add me for comp
+              </button>
+              <button onclick="insertQuickPhrase('How is the server ping right now?')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 11px; padding: 3px 10px; border-radius: 12px; cursor: pointer; white-space: nowrap;">
+                📡 Server ping check
+              </button>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="chat-input-bar">
+              <input type="text" class="chat-input" id="chat-msg-input" placeholder="Type message in this national room... (Enter to send)" onkeydown="if(event.key==='Enter') sendRoomMessage()">
+              <button class="btn-send" onclick="sendRoomMessage()">
+                <span>SEND</span>
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: DIRECT MESSAGES (DMs) -->
+        <section class="tab-panel" id="tab-dms">
+          <h1 style="font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: 1px; margin-bottom: 20px;">
+            PRIVATE DIRECT MESSAGES // REAL-TIME COMMS
+          </h1>
+
+          <div style="display: flex; height: calc(100vh - 210px); background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px; overflow: hidden;">
+            <!-- Left DM Convos List -->
+            <div style="width: 300px; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column;">
+              <div style="padding: 14px; border-bottom: 1px solid var(--border-subtle); font-size: 13px; font-weight: 700;">
+                CONVERSATIONS
+              </div>
+              <div id="dm-convos-list" style="flex: 1; overflow-y: auto;">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Right DM Active Chat Window -->
+            <div style="flex: 1; display: flex; flex-direction: column;" id="dm-chat-pane">
+              <div id="dm-header" style="padding: 14px 20px; background: var(--bg-elevated); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 12px;" id="dm-partner-info">
+                  <span style="color: var(--text-dim); font-size: 13px;">Select a conversation or gamer to start chatting</span>
+                </div>
+              </div>
+
+              <div class="chat-messages-wrap" id="dm-messages-stream">
+                <div style="text-align: center; color: var(--text-dim); margin-top: 50px;">
+                  <i class="fa-solid fa-lock fa-2xl" style="margin-bottom: 16px; opacity: 0.5;"></i>
+                  <p>Encrypted 1-on-1 private gamer chat.</p>
+                </div>
+              </div>
+
+              <div class="chat-input-bar">
+                <input type="text" class="chat-input" id="dm-input-box" placeholder="Send private DM... (Enter to send)" onkeydown="if(event.key==='Enter') sendDM()">
+                <button class="btn-send" onclick="sendDM()">
+                  <span>SEND</span>
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: FRIENDS CENTER -->
+        <section class="tab-panel" id="tab-friends">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div>
+              <h1 style="font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: 1px;">
+                FRIENDS LIST & PRESENCE
+              </h1>
+              <p style="color: var(--text-muted); font-size: 14px;">
+                Manage your squadmates, track who is online or in match, and jump in together.
+              </p>
+            </div>
+            
+            <!-- Add Friend Input -->
+            <div style="display: flex; gap: 8px;">
+              <input type="text" class="form-input" id="input-add-friend" placeholder="Enter GamerTag or username" style="width: 240px;">
+              <button class="btn-squad-create" onclick="sendFriendRequest()">
+                <i class="fa-solid fa-user-plus"></i> ADD FRIEND
+              </button>
+            </div>
+          </div>
+
+          <!-- Pending Friend Requests Section (if any) -->
+          <div id="pending-requests-box" style="margin-bottom: 24px; display: none;">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--neon-gold); text-transform: uppercase; margin-bottom: 12px;">
+              <i class="fa-solid fa-clock"></i> PENDING INCOMING REQUESTS
+            </h3>
+            <div id="pending-requests-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Active Friends Grid -->
+          <h3 style="font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;">
+            MY FRIENDS (<span id="friends-count">0</span>)
+          </h3>
+          <div id="friends-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+            <!-- Populated dynamically -->
+          </div>
+        </section>
+
+        <!-- TAB 5: GAMER KARMA & ENDORSEMENTS -->
+        <section class="tab-panel" id="tab-karma">
+          <div style="margin-bottom: 24px;">
+            <h1 style="font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: 1px;">
+              GAMER KARMA & REPUTATION SYSTEM
+            </h1>
+            <p style="color: var(--text-muted); font-size: 14px;">
+              High-karma players are proven tilt-proof, clutch shotcallers, and positive vibes teammates. Weed out toxic randoms.
+            </p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px;">
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; text-align: center;">
+              <i class="fa-solid fa-brain fa-2xl" style="color: var(--neon-purple); margin-bottom: 12px;"></i>
+              <h3 style="font-size: 16px; font-weight: 700;">Shotcaller</h3>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Smart utility, calm callouts, and sharp round rotations.</p>
+            </div>
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; text-align: center;">
+              <i class="fa-solid fa-shield-cat fa-2xl" style="color: var(--neon-cyan); margin-bottom: 12px;"></i>
+              <h3 style="font-size: 16px; font-weight: 700;">Tilt-Proof</h3>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Never gives up, mental fortitude even down 0-11.</p>
+            </div>
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; text-align: center;">
+              <i class="fa-solid fa-bolt fa-2xl" style="color: var(--neon-gold); margin-bottom: 12px;"></i>
+              <h3 style="font-size: 16px; font-weight: 700;">Clutch God</h3>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">1v3 specialist, steady aim under final round pressure.</p>
+            </div>
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; text-align: center;">
+              <i class="fa-solid fa-face-smile fa-2xl" style="color: var(--neon-green); margin-bottom: 12px;"></i>
+              <h3 style="font-size: 16px; font-weight: 700;">Good Vibes</h3>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Friendly, welcoming, and elevates everyone's spirit.</p>
+            </div>
+          </div>
+
+          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">
+            TOP REPUTATION COMMUNITY GAMERS
+          </h3>
+          <div id="karma-gamers-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+            <!-- Populated dynamically -->
+          </div>
+        </section>
+
+        <!-- TAB 6: GAMER PROFILE -->
+        <section class="tab-panel" id="tab-profile">
+          <div style="max-width: 650px; margin: 0 auto; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 32px;">
+            <h1 style="font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: 1px; margin-bottom: 20px;">
+              EDIT GAMER PROFILE & RIG SETTINGS
+            </h1>
+
+            <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 24px;">
+              <div id="profile-avatar-preview" style="width: 72px; height: 72px; border-radius: 14px; background: #1c2436; display: flex; align-items: center; justify-content: center; font-size: 36px; border: 2px solid var(--neon-cyan);">
+                🥷
+              </div>
+              <div>
+                <label class="form-label">Select Avatar</label>
+                <select class="form-select" id="profile-avatar-select" onchange="updateAvatarPreview()">
+                  <option value="cyber_ninja">🥷 Cyber Ninja</option>
+                  <option value="neon_pilot">🚀 Neon Pilot</option>
+                  <option value="tactical_ghost">👻 Tactical Ghost</option>
+                  <option value="mech_warrior">🤖 Mech Warrior</option>
+                  <option value="cyber_samurai">⚔️ Cyber Samurai</option>
+                  <option value="bionic_brawler">🥊 Bionic Brawler</option>
+                  <option value="arctic_sniper">🎯 Arctic Sniper</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label">GamerTag</label>
+                <input type="text" class="form-input" id="profile-gamertag">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Country / Flag</label>
+                <select class="form-select" id="profile-country">
+                  <option value="US">🇺🇸 United States</option>
+                  <option value="GB">🇬🇧 United Kingdom</option>
+                  <option value="CA">🇨🇦 Canada</option>
+                  <option value="DE">🇩🇪 Germany</option>
+                  <option value="FR">🇫🇷 France</option>
+                  <option value="JP">🇯🇵 Japan</option>
+                  <option value="KR">🇰🇷 South Korea</option>
+                  <option value="BR">🇧🇷 Brazil</option>
+                  <option value="AU">🇦🇺 Australia</option>
+                  <option value="SE">🇸🇪 Sweden</option>
+                  <option value="PL">🇵🇱 Poland</option>
+                  <option value="ES">🇪🇸 Spain</option>
+                  <option value="IT">🇮🇹 Italy</option>
+                  <option value="MX">🇲🇽 Mexico</option>
+                  <option value="NL">🇳🇱 Netherlands</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Primary Game</label>
+                <select class="form-select" id="profile-primary-game">
+                  <option value="Valorant">Valorant</option>
+                  <option value="CS2">CS2</option>
+                  <option value="Apex Legends">Apex Legends</option>
+                  <option value="League of Legends">League of Legends</option>
+                  <option value="Warzone">Warzone</option>
+                  <option value="Rocket League">Rocket League</option>
+                  <option value="Overwatch 2">Overwatch 2</option>
+                  <option value="Rainbow Six Siege">Rainbow Six Siege</option>
+                  <option value="Dota 2">Dota 2</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Competitive Rank</label>
+                <input type="text" class="form-input" id="profile-rank" placeholder="e.g. Ascendant 2, Faceit 9, Master">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Platform</label>
+                <select class="form-select" id="profile-platform">
+                  <option value="PC">🖥️ PC Master Race</option>
+                  <option value="PS5">🎮 PlayStation 5</option>
+                  <option value="Xbox">🎮 Xbox Series X|S</option>
+                  <option value="Switch">🕹️ Nintendo Switch</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Microphone Status</label>
+                <select class="form-select" id="profile-mic">
+                  <option value="Always On">🎙️ Always On / Clear Comms</option>
+                  <option value="Push to Talk">🎙️ Push to Talk</option>
+                  <option value="Listening Only">🎧 Listening / Ping Comms</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Discord ID / Voice Tag</label>
+              <input type="text" class="form-input" id="profile-discord" placeholder="e.g. gamer#0001 or discord username">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Gamer Bio & Playstyle</label>
+              <textarea class="form-textarea" id="profile-bio" placeholder="Tell potential squadmates what roles you play, when you queue, and your mindset."></textarea>
+            </div>
+
+            <button class="btn-submit" onclick="saveProfileChanges()">
+              SAVE PROFILE SETTINGS
+            </button>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL 1: CREATE SQUAD LOBBY -->
+  <div class="modal-overlay" id="modal-create-squad">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-users" style="color: var(--neon-cyan);"></i>
+          <span>CREATE SQUAD LOBBY</span>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-create-squad')">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Lobby Title</label>
+        <input type="text" class="form-input" id="squad-title" placeholder="e.g. 'Ascendant push tonight - need chill smokes & IGL'">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Game</label>
+          <select class="form-select" id="squad-game">
+            <option value="Valorant">Valorant</option>
+            <option value="CS2">CS2</option>
+            <option value="Apex Legends">Apex Legends</option>
+            <option value="League of Legends">League of Legends</option>
+            <option value="Warzone">Warzone</option>
+            <option value="Rocket League">Rocket League</option>
+            <option value="Overwatch 2">Overwatch 2</option>
+            <option value="Rainbow Six Siege">Rainbow Six Siege</option>
+            <option value="Dota 2">Dota 2</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Game Mode</label>
+          <select class="form-select" id="squad-mode">
+            <option value="Competitive / Ranked">Competitive / Ranked</option>
+            <option value="Casual / Chill">Casual / Chill</option>
+            <option value="Tournament / Scrims">Tournament / Scrims</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Target Rank</label>
+          <input type="text" class="form-input" id="squad-rank-req" placeholder="e.g. Diamond+, Any Rank">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Comms / Mic Requirement</label>
+          <select class="form-select" id="squad-mic-req">
+            <option value="Mic Required">🎙️ Mic Required</option>
+            <option value="Push to Talk">🎙️ Push to Talk</option>
+            <option value="No Mic Needed">🎧 No Mic Needed</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Server Region</label>
+          <select class="form-select" id="squad-region">
+            <option value="NA (East / West)">NA (East / West)</option>
+            <option value="EU West">EU West</option>
+            <option value="EU Central">EU Central</option>
+            <option value="Asia-Pacific">Asia-Pacific</option>
+            <option value="East Asia">East Asia</option>
+            <option value="South America">South America</option>
+            <option value="Oceania">Oceania</option>
+            <option value="Latin America North">Latin America North</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Party Size</label>
+          <select class="form-select" id="squad-max-players">
+            <option value="5">5 Players (Standard Valo/CS/LoL)</option>
+            <option value="4">4 Players (Warzone Squad)</option>
+            <option value="3">3 Players (Apex Trio / RL 3s)</option>
+            <option value="2">2 Players (Duo Partner)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Role in Squad</label>
+        <select class="form-select" id="squad-leader-role">
+          <option value="IGL / Shotcaller">🧠 IGL / Shotcaller</option>
+          <option value="Entry Fragger">⚡ Entry Fragger</option>
+          <option value="Support / Healer">🛡️ Support / Healer</option>
+          <option value="Sniper / Anchor">🎯 Sniper / Anchor</option>
+          <option value="Flex">🔄 Flex Player</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Discord Voice Room / Invite Link (Optional)</label>
+        <input type="text" class="form-input" id="squad-discord" placeholder="https://discord.gg/your-channel">
+      </div>
+
+      <button class="btn-submit" onclick="submitCreateSquad()">
+        LAUNCH SQUAD LOBBY
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL 2: ACTIVE SQUAD LOBBY -->
+  <div class="modal-overlay" id="modal-active-squad">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-gamepad" style="color: var(--neon-cyan);"></i>
+          <span id="active-squad-title">LOBBY TITLE</span>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-active-squad')">&times;</button>
+      </div>
+
+      <!-- Ready Check Alert Banner (shows during active ready check) -->
+      <div id="ready-check-banner" class="ready-check-box" style="display: none;">
+        <h2 style="color: var(--neon-gold); font-size: 20px; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px;">
+          ⚡ READY CHECK INITIATED!
+        </h2>
+        <p style="font-size: 13px; color: var(--text-main); margin-bottom: 12px;" id="ready-check-sender">
+          Squad Leader initiated a ready check. Confirm readiness!
+        </p>
+        <button onclick="confirmReady()" style="background: var(--neon-green); color: #07090e; font-weight: 800; font-size: 14px; padding: 10px 24px; border: none; border-radius: 8px; cursor: pointer;">
+          I AM READY!
+        </button>
+      </div>
+
+      <!-- Squad Meta Badges -->
+      <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;" id="active-squad-badges">
+        <!-- Filled dynamically -->
+      </div>
+
+      <!-- Squad Roster List -->
+      <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;">
+        SQUAD ROSTER (<span id="active-squad-count">1/5</span>)
+      </h3>
+      <div id="active-squad-members" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+        <!-- Filled dynamically -->
+      </div>
+
+      <!-- Voice Link & Actions -->
+      <div id="active-squad-voice-box" style="display: none; background: rgba(114, 137, 218, 0.15); border: 1px solid rgba(114, 137, 218, 0.4); border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #a5b4fc;">
+          <i class="fa-brands fa-discord fa-lg"></i>
+          <span>Voice Room Available</span>
+        </div>
+        <a id="active-squad-voice-link" href="#" target="_blank" style="background: #5865f2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none;">
+          JOIN DISCORD VOICE
+        </a>
+      </div>
+
+      <!-- Lobby Controls -->
+      <div style="display: flex; gap: 12px;">
+        <button id="btn-toggle-ready" onclick="toggleMyReadyState()" style="flex: 1; background: rgba(0, 255, 135, 0.2); border: 1px solid var(--neon-green); color: var(--neon-green); font-weight: 800; font-size: 13px; padding: 12px; border-radius: 8px; cursor: pointer;">
+          TOGGLE READY STATUS
+        </button>
+        <button id="btn-leader-ready-check" onclick="startLeaderReadyCheck()" style="display: none; background: var(--neon-gold); color: #07090e; font-weight: 800; font-size: 13px; padding: 12px 18px; border-radius: 8px; border: none; cursor: pointer;">
+          ⚡ READY CHECK
+        </button>
+        <button onclick="leaveActiveSquad()" style="background: rgba(255, 51, 102, 0.15); border: 1px solid var(--neon-coral); color: var(--neon-coral); font-weight: 700; font-size: 13px; padding: 12px 18px; border-radius: 8px; cursor: pointer;">
+          LEAVE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: GAMER CARD & ENDORSEMENT -->
+  <div class="modal-overlay" id="modal-gamer-card">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-address-card" style="color: var(--neon-cyan);"></i>
+          <span>GAMER PROFILE CARD</span>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-gamer-card')">&times;</button>
+      </div>
+
+      <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 20px;">
+        <div id="card-avatar" style="width: 64px; height: 64px; border-radius: 12px; background: #1c2436; display: flex; align-items: center; justify-content: center; font-size: 32px; border: 2px solid var(--neon-cyan);">
+          🥷
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h2 id="card-gamertag" style="font-size: 20px; font-weight: 800;">GamerTag</h2>
+            <span id="card-country-flag" style="font-size: 18px;">🇺🇸</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+            <span class="rank-badge rank-diamond" id="card-rank">Diamond</span>
+            <span style="font-size: 12px; color: var(--neon-cyan);" id="card-game">Valorant</span>
+            <span style="font-size: 12px; color: var(--text-dim);" id="card-platform">PC</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bio -->
+      <div style="background: var(--bg-core); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px;">Bio</div>
+        <div id="card-bio" style="font-size: 13px; color: var(--text-main); line-height: 1.4;">
+          No bio provided yet.
+        </div>
+      </div>
+
+      <!-- Karma & Endorsements -->
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+            KARMA SCORE
+          </span>
+          <span id="card-karma-score" style="font-size: 14px; font-weight: 800; color: var(--neon-green);">
+            ⭐ 15 Karma
+          </span>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button onclick="submitEndorsement('Shotcaller')" style="background: rgba(157, 78, 221, 0.15); border: 1px solid var(--neon-purple); color: #d8b4fe; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+            🧠 Shotcaller (+5)
+          </button>
+          <button onclick="submitEndorsement('Tilt-Proof')" style="background: rgba(0, 242, 254, 0.15); border: 1px solid var(--neon-cyan); color: #67e8f9; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+            🛡️ Tilt-Proof (+5)
+          </button>
+          <button onclick="submitEndorsement('Clutch God')" style="background: rgba(255, 209, 102, 0.15); border: 1px solid var(--neon-gold); color: #fde047; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+            ⚡ Clutch God (+5)
+          </button>
+          <button onclick="submitEndorsement('Good Vibes')" style="background: rgba(0, 255, 135, 0.15); border: 1px solid var(--neon-green); color: #86efac; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+            🤝 Good Vibes (+5)
+          </button>
+        </div>
+      </div>
+
+      <!-- Direct Actions -->
+      <div style="display: flex; gap: 10px;">
+        <button id="card-btn-dm" onclick="startDMFromCard()" style="flex: 1; background: var(--neon-cyan); color: #07090e; font-weight: 800; font-size: 13px; padding: 10px; border: none; border-radius: 8px; cursor: pointer;">
+          <i class="fa-solid fa-message"></i> SEND DM
+        </button>
+        <button id="card-btn-friend" onclick="sendFriendRequestFromCard()" style="flex: 1; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-subtle); color: white; font-weight: 700; font-size: 13px; padding: 10px; border-radius: 8px; cursor: pointer;">
+          <i class="fa-solid fa-user-plus"></i> ADD FRIEND
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: AUTH / LOGIN / SIGNUP -->
+  <div class="modal-overlay" id="modal-auth">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-user-shield" style="color: var(--neon-cyan);"></i>
+          <span id="auth-modal-title">PLAYER LOGIN</span>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-auth')">&times;</button>
+      </div>
+
+      <!-- Auth Switcher -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; background: var(--bg-core); padding: 4px; border-radius: 8px;">
+        <button id="tab-auth-login" onclick="toggleAuthTab('login')" style="flex: 1; background: var(--neon-cyan); color: #07090e; font-weight: 800; font-size: 13px; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">
+          SIGN IN
+        </button>
+        <button id="tab-auth-register" onclick="toggleAuthTab('register')" style="flex: 1; background: transparent; color: var(--text-muted); font-weight: 700; font-size: 13px; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">
+          CREATE ACCOUNT
+        </button>
+      </div>
+
+      <!-- Quick Demo Login Bar -->
+      <div style="margin-bottom: 16px; padding: 10px; background: rgba(0, 242, 254, 0.08); border: 1px dashed rgba(0, 242, 254, 0.3); border-radius: 8px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--neon-cyan); margin-bottom: 6px;">
+          ⚡ INSTANT DEMO LOGIN:
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button onclick="quickDemoLogin('vipershot')" style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+            🥷 ViperShot (US)
+          </button>
+          <button onclick="quickDemoLogin('neonvalkyrie')" style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+            🚀 NeonValkyrie (UK)
+          </button>
+          <button onclick="quickDemoLogin('shadowstriker')" style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+            👻 ShadowStriker (DE)
+          </button>
+          <button onclick="quickDemoLogin('kabora')" style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+            🤖 Kabora (KR)
+          </button>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <div id="form-login-pane">
+        <div class="form-group">
+          <label class="form-label">Username or Email</label>
+          <input type="text" class="form-input" id="login-username" placeholder="e.g. vipershot or viper@respawn.gg">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="login-password" placeholder="••••••••">
+        </div>
+        <button class="btn-submit" onclick="submitLogin()">LOG IN</button>
+      </div>
+
+      <!-- Register Form -->
+      <div id="form-register-pane" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">GamerTag (Visible in lobbies & chat)</label>
+          <input type="text" class="form-input" id="reg-gamertag" placeholder="e.g. AceKing_99">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-input" id="reg-username" placeholder="e.g. aceking">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="reg-email" placeholder="ace@gamer.com">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="reg-password" placeholder="At least 6 characters">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nationality Flag</label>
+            <select class="form-select" id="reg-country">
+              <option value="US">🇺🇸 United States</option>
+              <option value="GB">🇬🇧 United Kingdom</option>
+              <option value="CA">🇨🇦 Canada</option>
+              <option value="DE">🇩🇪 Germany</option>
+              <option value="FR">🇫🇷 France</option>
+              <option value="JP">🇯🇵 Japan</option>
+              <option value="KR">🇰🇷 South Korea</option>
+              <option value="BR">🇧🇷 Brazil</option>
+              <option value="AU">🇦🇺 Australia</option>
+              <option value="SE">🇸🇪 Sweden</option>
+              <option value="PL">🇵🇱 Poland</option>
+              <option value="ES">🇪🇸 Spain</option>
+              <option value="IT">🇮🇹 Italy</option>
+              <option value="MX">🇲🇽 Mexico</option>
+              <option value="NL">🇳🇱 Netherlands</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Primary Game</label>
+            <select class="form-select" id="reg-game">
+              <option value="Valorant">Valorant</option>
+              <option value="CS2">CS2</option>
+              <option value="Apex Legends">Apex Legends</option>
+              <option value="League of Legends">League of Legends</option>
+              <option value="Warzone">Warzone</option>
+              <option value="Rocket League">Rocket League</option>
+              <option value="Overwatch 2">Overwatch 2</option>
+              <option value="Rainbow Six Siege">Rainbow Six Siege</option>
+              <option value="Dota 2">Dota 2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Platform</label>
+            <select class="form-select" id="reg-platform">
+              <option value="PC">🖥️ PC</option>
+              <option value="PS5">🎮 PlayStation 5</option>
+              <option value="Xbox">🎮 Xbox Series X|S</option>
+              <option value="Switch">🕹️ Nintendo Switch</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-submit" onclick="submitRegister()">CREATE PRO ACCOUNT</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/audio.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
